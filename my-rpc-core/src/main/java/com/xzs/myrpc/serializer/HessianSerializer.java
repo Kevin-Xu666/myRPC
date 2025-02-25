@@ -22,7 +22,7 @@ public class HessianSerializer implements Serializer {
     @Override
     public <T> T deserialize(byte[] bytes, Class<T> tClass) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        HessianInput hi = new HessianInput(bis);
+        Hessian2Input hi = new Hessian2Input(bis);
         return (T) hi.readObject(tClass);
     }
 }
