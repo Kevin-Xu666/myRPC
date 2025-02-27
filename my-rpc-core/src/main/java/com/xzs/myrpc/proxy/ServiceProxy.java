@@ -1,8 +1,7 @@
 package com.xzs.myrpc.proxy;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import cn.hutool.core.util.IdUtil;
 import com.xzs.myrpc.RpcApplication;
 import com.xzs.myrpc.config.RpcConfig;
 import com.xzs.myrpc.constant.RpcConstant;
@@ -11,9 +10,9 @@ import com.xzs.myrpc.model.RpcResponse;
 import com.xzs.myrpc.model.ServiceMetaInfo;
 import com.xzs.myrpc.registry.Registry;
 import com.xzs.myrpc.registry.RegistryFactory;
-import com.xzs.myrpc.serializer.JdkSerializer;
 import com.xzs.myrpc.serializer.Serializer;
 import com.xzs.myrpc.serializer.SerializerFactory;
+import com.xzs.myrpc.server.tcp.VertxTcpClient;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -60,15 +59,9 @@ public class ServiceProxy implements InvocationHandler {
             }
             ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
 
-            // 发送请求
-            try (HttpResponse httpResponse = HttpRequest.post(selectedServiceMetaInfo.getServiceAddress())
-                    .body(bodyBytes)
-                    .execute()) {
-                byte[] result = httpResponse.bodyBytes();
-                // 反序列化
-                RpcResponse rpcResponse = serializer.deserialize(result, RpcResponse.class);
-                return rpcResponse.getData();
-            }
+            // 发送 TCP 请求
+            RpcResponse rpcResponse = VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo);
+            return rpcResponse.getData();
         } catch (IOException e) {
             e.printStackTrace();
         }
